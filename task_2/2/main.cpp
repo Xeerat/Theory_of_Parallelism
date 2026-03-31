@@ -25,13 +25,30 @@ int main(int argc, char* argv[])
     double b = 4.0;
     double h = (b - a) / nstep;
     double sum = 0.0;
-
-    auto start = std::chrono::steady_clock::now();
   
-    #pragma omp parallel for reduction(+:sum) schedule(static)
-    for (int i = 0; i < nstep; i++) 
+    auto start = std::chrono::steady_clock::now();
+    #pragma omp parallel reduction(+:sum)
     {
-        sum += func(a + h * (i + 0.5));
+        size_t nthreads = omp_get_num_threads();
+        size_t threadid = omp_get_thread_num();
+        size_t per_thread = nstep / nthreads;
+        size_t lb = threadid * per_thread;
+        size_t ub = 0;
+        if (threadid == nthreads - 1)
+        {
+            ub = nstep;
+        }
+        else
+        {
+            ub = lb + per_thread;
+        }
+
+        double x = a + h * (lb + 0.5);
+        for (size_t i = lb; i < ub; i++)
+        {   
+            sum += func(x);
+            x += h;
+        }
     }
     sum *= h;
 
