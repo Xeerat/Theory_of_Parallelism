@@ -124,7 +124,6 @@ public:
 
 thread_local std::mt19937 gen(std::random_device{}());
 thread_local std::uniform_real_distribution<double> dist(1.0, 5.0);
-thread_local std::uniform_int_distribution<size_t> size_dist(6, 9999);
 
 template<typename T>
 struct arity_helper;
@@ -142,10 +141,8 @@ auto invoke_with_vector(Func func, const std::vector<T>& args, std::index_sequen
 }
 
 template<typename T, typename Func>
-void client(Server<T>& server, Func func, const std::string& filename)
+void client(Server<T>& server, Func func, const std::string& filename, size_t N)
 {
-    size_t N = size_dist(gen);
-
     std::ofstream file(filename);
     if (!file.is_open())
     {
@@ -216,17 +213,30 @@ void test_file(const std::string& filename)
     std::cout << filename << " OK\n";
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    size_t N = 1000;
+    if (argc == 2)
+    {
+        N = std::stoul(argv[1]);
+    }
     Server<double> server;
 
-    std::thread t1([&]() { client(server, my_sin<double>,  "res_sin.txt"); });
-    std::thread t2([&]() { client(server, my_sqrt<double>, "res_sqrt.txt"); });
-    std::thread t3([&]() { client(server, my_pow<double>,  "res_pow.txt"); });
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::thread t1([&]() { client(server, my_sin<double>,  "res_sin.txt", N); });
+    std::thread t2([&]() { client(server, my_sqrt<double>, "res_sqrt.txt", N); });
+    std::thread t3([&]() { client(server, my_pow<double>,  "res_pow.txt", N); });
 
     t1.join();
     t2.join();
     t3.join();
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::cout << (end - start).count() << "seconds" << std::endl;
+
+    server.stop();
 
     test_file("res_sin.txt");
     test_file("res_sqrt.txt");
