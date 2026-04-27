@@ -15,6 +15,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <chrono>
 
 
 template<typename T>
@@ -122,9 +123,6 @@ public:
     }
 };
 
-thread_local std::mt19937 gen(std::random_device{}());
-thread_local std::uniform_real_distribution<double> dist(1.0, 5.0);
-
 template<typename T>
 struct arity_helper;
 
@@ -141,26 +139,27 @@ auto invoke_with_vector(Func func, const std::vector<T>& args, std::index_sequen
 }
 
 template<typename T, typename Func>
-void client(Server<T>& server, Func func, const std::string& filename, size_t N)
+void client(
+    Server<T>& server, 
+    Func func, 
+    const std::string& filename,
+    const std::vector<std::vector<T>>& data
+)
 {
     std::ofstream file(filename);
-    if (!file.is_open())
-    {
-        std::cerr << "Error opening file\n";
-        return;
-    }
 
     constexpr size_t num_args = arity_helper<std::decay_t<Func>>::value;
     constexpr auto indices = std::make_index_sequence<num_args>{};
 
     std::vector<size_t> ids;
 
-    for (size_t i = 0; i < N; i++)
+    for (const auto& row : data)
     {
-        std::vector<T> args;
+        std::vector<T> args(num_args);
+
         for (size_t j = 0; j < num_args; j++)
         {
-            args.push_back(static_cast<T>(dist(gen)));
+            args[j] = row[j];
         }
 
         auto task = [func, args, indices]() -> T
@@ -196,23 +195,6 @@ T my_pow(T x, T y)
     return std::pow(x, y); 
 }
 
-void test_file(const std::string& filename)
-{
-    std::ifstream file(filename);
-    double value;
-
-    while (file >> value)
-    {
-        if (std::isnan(value) || std::isinf(value))
-        {
-            std::cout << "Error in " << filename << "\n";
-            return;
-        }
-    }
-
-    std::cout << filename << " OK\n";
-}
-
 int main(int argc, char* argv[])
 {
     size_t N = 1000;
@@ -220,13 +202,38 @@ int main(int argc, char* argv[])
     {
         N = std::stoul(argv[1]);
     }
+
+    {
+        std::ofstream data("data.txt");
+        std::mt19937 gen(42);
+        std::uniform_real_distribution<double> dist(1.0, 5.0);
+
+        for (size_t i = 0; i < N; i++)
+        {
+            double x = dist(gen);
+            double y = dist(gen);
+            data << x << " " << y << "\n";
+        }
+    }
+
+    std::vector<std::vector<double>> data;
+    {
+        std::ifstream input("data.txt");
+        double x, y;
+
+        while (input >> x >> y)
+        {
+            data.push_back({x, y});
+        }
+    }
+
     Server<double> server;
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::thread t1([&]() { client(server, my_sin<double>,  "res_sin.txt", N); });
-    std::thread t2([&]() { client(server, my_sqrt<double>, "res_sqrt.txt", N); });
-    std::thread t3([&]() { client(server, my_pow<double>,  "res_pow.txt", N); });
+    std::thread t1([&]() { client(server, my_sin<double>,  "res_sin.txt", data); });
+    std::thread t2([&]() { client(server, my_sqrt<double>, "res_sqrt.txt", data); });
+    std::thread t3([&]() { client(server, my_pow<double>,  "res_pow.txt", data); });
 
     t1.join();
     t2.join();
@@ -234,13 +241,10 @@ int main(int argc, char* argv[])
 
     auto end = std::chrono::high_resolution_clock::now();
 
-    std::cout << (end - start).count() << "seconds" << std::endl;
+    double seconds = std::chrono::duration<double>(end - start).count();
+    std::cout << seconds << " seconds\n";
 
     server.stop();
-
-    test_file("res_sin.txt");
-    test_file("res_sqrt.txt");
-    test_file("res_pow.txt");
-
+    
     return 0;
 }
