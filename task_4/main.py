@@ -15,6 +15,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
+cv2.utils.logging.setLogLevel(cv2.utils.logging.LOG_LEVEL_ERROR)
 
 class Sensor:
     def get(self):
@@ -58,7 +59,7 @@ class SensorCam:
 
         ret, frame = self.cap.read()
         if not ret:
-            logging.error("Camera read error (device removed?)")
+            logging.error("Camera read error")
             return None
         return frame
 
@@ -120,6 +121,7 @@ def camera_worker(cam: SensorCam, queue: Queue, stop_event: threading.Event):
 
             if frame is None:
                 stop_event.set()
+                print("Camera read error")
                 break
 
             if queue.full():
