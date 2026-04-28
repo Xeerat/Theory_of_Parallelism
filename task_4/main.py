@@ -134,6 +134,7 @@ def camera_worker(cam: SensorCam, queue: Queue, stop_event: threading.Event):
 
     except Exception as e:
         logging.error(f"Camera worker error: {e}")
+        print("There was a problem with the camera")
         stop_event.set()
 
 
