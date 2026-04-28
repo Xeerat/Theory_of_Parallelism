@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <vector>
 #include <chrono>
+#include <argparse/argparse.hpp>
 
 
 template<typename T>
@@ -197,13 +198,17 @@ T my_pow(T x, T y)
 }
 
 int main(int argc, char* argv[])
-{
-    size_t N = 1000;
-    if (argc == 2)
-    {
-        N = std::stoul(argv[1]);
-    }
+{  
+    argparse::ArgumentParser program("program_name");
 
+    program.add_argument("number")
+        .help("number of tasks")
+        .scan<'i', int>()
+        .default_value(1000);
+
+    program.parse_args(argc, argv);
+
+    auto N = program.get<int>("number");
     {
         std::ofstream data("data.txt");
         std::mt19937 gen(42);
