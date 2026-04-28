@@ -9,6 +9,7 @@
 #include <atomic>
 #include <stdexcept>
 #include <cmath>
+#include <chrono>
 #include <utility>
 #include <fstream>
 #include <random>
@@ -220,9 +221,10 @@ int main(int argc, char* argv[])
     {
         N = std::stoul(argv[1]);
     }
-    Server<double> server;
 
     auto start = std::chrono::high_resolution_clock::now();
+
+    Server<double> server;
 
     std::thread t1([&]() { client(server, my_sin<double>,  "res_sin.txt", N); });
     std::thread t2([&]() { client(server, my_sqrt<double>, "res_sqrt.txt", N); });
@@ -232,11 +234,12 @@ int main(int argc, char* argv[])
     t2.join();
     t3.join();
 
-    auto end = std::chrono::high_resolution_clock::now();
-
-    std::cout << (end - start).count() << "seconds" << std::endl;
-
     server.stop();
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+
+    std::cout << duration.count() << "seconds" << std::endl;
 
     test_file("res_sin.txt");
     test_file("res_sqrt.txt");
