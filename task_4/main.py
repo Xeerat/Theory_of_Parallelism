@@ -1,3 +1,9 @@
+import os
+
+os.environ["OPENCV_LOG_LEVEL"] = "SILENT"
+os.environ["OPENCV_VIDEOIO_PRIORITY_FFMPEG"] = "0"
+os.environ["OPENCV_VIDEOIO_DEBUG"] = "0"
+
 import cv2
 import time
 import threading
@@ -14,8 +20,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
-
-cv2.utils.logging.setLogLevel(cv2.utils.logging.LOG_LEVEL_ERROR)
 
 class Sensor:
     def get(self):
@@ -156,7 +160,11 @@ def main():
     s2_queue = Queue(maxsize=1)
     s3_queue = Queue(maxsize=1)
 
-    cam = SensorCam(int(args.cam), (w, h))
+    try:
+        cam = SensorCam(int(args.cam), (w, h))
+    except RuntimeError:
+        print("Camera not found")
+        return
 
     s1 = SensorX(0.01)  
     s2 = SensorX(0.1)   
