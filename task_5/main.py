@@ -1,3 +1,9 @@
+import os
+
+os.environ["OPENCV_LOG_LEVEL"] = "SILENT"
+os.environ["OPENCV_VIDEOIO_PRIORITY_FFMPEG"] = "0"
+os.environ["OPENCV_VIDEOIO_DEBUG"] = "0"
+
 import argparse
 import time
 import cv2
@@ -87,7 +93,12 @@ def create_writer(cap, output_path):
 
 
 def run_single(source, output_path):
-    cap = VideoCaptureRAII(source)
+    try:
+        cap = VideoCaptureRAII(source)
+    except RuntimeError:
+        print("Source not found")
+        return 
+    
     writer, _ = create_writer(cap, output_path)
 
     model = YOLOModel()
@@ -99,6 +110,7 @@ def run_single(source, output_path):
         ret, frame = cap.read()
 
         if not ret:
+            print("Camera read error")
             break
 
         frame = process_frame(model, frame)
@@ -124,7 +136,11 @@ def run_single(source, output_path):
 
 
 def run_multi(source, output_path, n_workers):
-    cap = VideoCaptureRAII(source)
+    try:
+        cap = VideoCaptureRAII(source)
+    except RuntimeError:
+        print("Source not found")
+        return 
 
     writer, _ = create_writer(cap, output_path)
 
@@ -153,6 +169,7 @@ def run_multi(source, output_path, n_workers):
         ret, frame = cap.read()
 
         if not ret:
+            print("Camera read error")
             break
 
         input_q.put((frame_id, frame))

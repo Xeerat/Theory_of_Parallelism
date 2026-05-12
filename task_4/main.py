@@ -8,7 +8,6 @@ import cv2
 import time
 import threading
 import argparse
-import os
 import logging
 from queue import Queue, Empty
 
