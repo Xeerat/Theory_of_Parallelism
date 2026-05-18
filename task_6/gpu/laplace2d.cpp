@@ -52,27 +52,30 @@ double calcNext(double *A, double *Anew, int m, int n)
 {
     double error = 0.0;
 
-    #pragma acc parallel loop gang vector reduction(max:error) present(A,Anew)
-    for (int j = 1; j < n - 1; j++)
+    #pragma acc parallel present(A,Anew)
     {
-        for (int i = 1; i < m - 1; i++)
+        #pragma acc loop tile(32,32) reduction(max:error)
+        for (int j = 1; j < n - 1; j++)
         {
-            int idx = j * m + i;
+            for (int i = 1; i < m - 1; i++)
+            {
+                int idx = j * m + i;
 
-            double val =
-                0.25 * (
-                    A[idx + 1] +
-                    A[idx - 1] +
-                    A[idx - m] +
-                    A[idx + m]
-                );
+                double val =
+                    0.25 * (
+                        A[idx + 1] +
+                        A[idx - 1] +
+                        A[idx - m] +
+                        A[idx + m]
+                    );
 
-            Anew[idx] = val;
+                Anew[idx] = val;
 
-            double diff = fabs(val - A[idx]);
+                double diff = fabs(val - A[idx]);
 
-            if (diff > error)
-                error = diff;
+                if (diff > error)
+                    error = diff;
+            }
         }
     }
 
