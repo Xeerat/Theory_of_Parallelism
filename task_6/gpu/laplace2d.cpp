@@ -53,24 +53,26 @@ double calcNext(double *A, double *Anew, int m, int n)
     double error = 0.0;
 
     #pragma acc parallel loop reduction(max:error) present(A,Anew)
-    for (int j = 1; j < n-1; j++)
+    for (int j = 1; j < n - 1; j++)
     {
-        #pragma acc loop
-        for (int i = 1; i < m-1; i++)
-        {
-            int idx = j * m + i;
+        double *row     = &A[j * m];
+        double *row_up  = &A[(j - 1) * m];
+        double *row_dn  = &A[(j + 1) * m];
 
+        #pragma acc loop
+        for (int i = 1; i < m - 1; i++)
+        {
             double val =
                 0.25 * (
-                    A[idx + 1] +
-                    A[idx - 1] +
-                    A[idx - m] +
-                    A[idx + m]
+                    row[i + 1] +
+                    row[i - 1] +
+                    row_up[i] +
+                    row_dn[i]
                 );
 
-            Anew[idx] = val;
+            Anew[j * m + i] = val;
 
-            double diff = val - A[idx];
+            double diff = val - row[i];
             if (diff < 0) diff = -diff;
             if (diff > error) error = diff;
         }
