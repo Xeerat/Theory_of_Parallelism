@@ -52,14 +52,12 @@ double calcNext(double *A, double *Anew, int m, int n)
 {
     double error = 0.0;
 
-    #pragma acc parallel loop collapse(2) tile(32,32) reduction(max:error) present(A,Anew)
+    #pragma acc parallel loop gang vector reduction(max:error) present(A,Anew)
     for (int j = 1; j < n - 1; j++)
     {
         for (int i = 1; i < m - 1; i++)
         {
             int idx = j * m + i;
-
-            #pragma acc cache(A[idx-m:3*m])
 
             double val =
                 0.25 * (
