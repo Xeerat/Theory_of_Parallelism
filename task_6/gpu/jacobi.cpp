@@ -69,6 +69,7 @@ int main(int argc, char **argv)
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> runtime = end - start;
 
+    #pragma acc update self(A[:n*m])
     saveMatrix("result.txt", A, n, m);
 
     printf("Iterations: %d\n", iter);
