@@ -48,20 +48,34 @@ void initialize(double *__restrict A, double *__restrict Anew, int m, int n)
     #pragma acc enter data copyin(A[:m*n],Anew[:m*n])
 }
 
-double calcNext(double *__restrict A, double *__restrict Anew, int m, int n)
+double calcNext(double *A, double *Anew, int m, int n)
 {
     double error = 0.0;
+
     #pragma acc parallel loop reduction(max:error) present(A,Anew)
-    for( int j = 1; j < n-1; j++)
+    for (int j = 1; j < n-1; j++)
     {
         #pragma acc loop
-        for( int i = 1; i < m-1; i++ )
+        for (int i = 1; i < m-1; i++)
         {
-            Anew[OFFSET(j, i, m)] = 0.25 * ( A[OFFSET(j, i+1, m)] + A[OFFSET(j, i-1, m)]
-                                           + A[OFFSET(j-1, i, m)] + A[OFFSET(j+1, i, m)]);
-            error = fmax( error, fabs(Anew[OFFSET(j, i, m)] - A[OFFSET(j, i , m)]));
+            int idx = j * m + i;
+
+            double val =
+                0.25 * (
+                    A[idx + 1] +
+                    A[idx - 1] +
+                    A[idx - m] +
+                    A[idx + m]
+                );
+
+            Anew[idx] = val;
+
+            double diff = val - A[idx];
+            if (diff < 0) diff = -diff;
+            if (diff > error) error = diff;
         }
     }
+
     return error;
 }
         
