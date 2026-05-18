@@ -59,7 +59,9 @@ int main(int argc, char **argv)
     {
         error = calcNext(A, Anew, m, n);
 
-        swap(A, Anew, m, n);
+        double* tmp = A;
+        A = Anew;
+        Anew = tmp;
 
         iter++;
     }

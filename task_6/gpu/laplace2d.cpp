@@ -11,6 +11,13 @@ void initialize(double *__restrict A, double *__restrict Anew, int m, int n)
 
     for (int i = 0; i < m; i++) 
     {
+        double v = 10.0 + (20.0 - 10.0) * i / (m - 1);
+        A[i] = v;
+        Anew[i] = v;
+    }
+
+    for (int i = 0; i < m; i++) 
+    {
         double v = 20.0 + (30.0 - 20.0) * i / (m - 1);
         A[(n - 1) * m + i] = v;
         Anew[(n - 1) * m + i] = v;
@@ -58,18 +65,6 @@ double calcNext(double *__restrict A, double *__restrict Anew, int m, int n)
     return error;
 }
         
-void swap(double *__restrict A, double *__restrict Anew, int m, int n)
-{
-    #pragma acc parallel loop present(A,Anew)
-    for( int j = 1; j < n-1; j++)
-    {
-        #pragma acc loop
-        for( int i = 1; i < m-1; i++ )
-        {
-            A[OFFSET(j, i, m)] = Anew[OFFSET(j, i, m)];    
-        }
-    }
-}
 
 void deallocate(double *__restrict A, double *__restrict Anew)
 {
