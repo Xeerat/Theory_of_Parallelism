@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <chrono>
 #include <fstream>
 #include <omp.h>
 #include <iostream>

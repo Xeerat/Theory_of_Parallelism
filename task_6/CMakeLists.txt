@@ -8,4 +8,8 @@ set(CMAKE_CXX_COMPILER pgc++)
 
 set(CMAKE_CXX_FLAGS "-O2 -acc -Minfo=all")
 
-add_executable(app main.cpp laplace2d.cpp)
+find_package(Boost REQUIRED COMPONENTS program_options)
+
+add_executable(app jacobi.cpp laplace2d.cpp)
+
+target_link_libraries(app Boost::program_options)
