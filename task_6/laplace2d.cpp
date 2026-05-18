@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#define OFFSET(x, y, m) (((x)*(m)) + (y))
 
 void initialize(double *__restrict A, double *__restrict Anew, int m, int n)
 {
@@ -11,58 +10,70 @@ void initialize(double *__restrict A, double *__restrict Anew, int m, int n)
 
     for (int i = 0; i < m; i++) 
     {
-        A[OFFSET(0, i, m)] = 10.0 + (20.0 - 10.0) * i / (m - 1);
-        Anew[OFFSET(0, i, m)] = A[OFFSET(0, i, m)];
+        double v = 10.0 + (20.0 - 10.0) * i / (m - 1);
+        A[i] = v;
+        Anew[i] = v;
     }
 
     for (int i = 0; i < m; i++) 
     {
-        A[OFFSET(n-1, i, m)] = 20.0 + (30.0 - 20.0) * i / (m - 1);
-        Anew[OFFSET(n-1, i, m)] = A[OFFSET(n-1, i, m)];
+        double v = 20.0 + (30.0 - 20.0) * i / (m - 1);
+        A[(n - 1) * m + i] = v;
+        Anew[(n - 1) * m + i] = v;
     }
 
     for (int j = 0; j < n; j++) 
     {
-        A[OFFSET(j, 0, m)] = 10.0 + (20.0 - 10.0) * j / (n - 1);
-        Anew[OFFSET(j, 0, m)] = A[OFFSET(j, 0, m)];
+        double vL = 10.0 + (20.0 - 10.0) * j / (n - 1);
+        double vR = 20.0 + (30.0 - 20.0) * j / (n - 1);
+
+        A[j * m] = vL;
+        Anew[j * m] = vL;
+
+        A[j * m + (m - 1)] = vR;
+        Anew[j * m + (m - 1)] = vR;
     }
 
-    for (int j = 0; j < n; j++) 
-    {
-        A[OFFSET(j, m-1, m)] = 20.0 + (30.0 - 20.0) * j / (n - 1);
-        Anew[OFFSET(j, m-1, m)] = A[OFFSET(j, m-1, m)];
-    }
-
-    A[OFFSET(0, 0, m)] = 10.0;
-    A[OFFSET(0, m-1, m)] = 20.0;
-    A[OFFSET(n-1, 0, m)] = 20.0;
-    A[OFFSET(n-1, m-1, m)] = 30.0;
+    A[0] = 10.0;
+    A[m - 1] = 20.0;
+    A[(n - 1) * m] = 20.0;
+    A[n * m - 1] = 30.0;
 }
 
 double calcNext(double *__restrict A, double *__restrict Anew, int m, int n)
 {
     double error = 0.0;
-    for( int j = 1; j < n-1; j++)
+    for(int j = 1; j < n-1; j++)
     {
-        for( int i = 1; i < m-1; i++ )
+        int row = j * m;
+        int row_up = (j - 1) * m;
+        int row_down = (j + 1) * m;
+
+        for (int i = 1; i < m - 1; i++)
         {
-            Anew[OFFSET(j, i, m)] = 0.25 * ( A[OFFSET(j, i+1, m)] + A[OFFSET(j, i-1, m)]
-                                           + A[OFFSET(j-1, i, m)] + A[OFFSET(j+1, i, m)]);
-            error = fmax( error, fabs(Anew[OFFSET(j, i, m)] - A[OFFSET(j, i , m)]));
+            int idx = row + i;
+
+            double val =
+                0.25 * (
+                    A[row + i + 1] +
+                    A[row + i - 1] +
+                    A[row_up + i] +
+                    A[row_down + i]
+                );
+
+            Anew[idx] = val;
+
+            error = fmax(error, fabs(val - A[idx]));
         }
     }
     return error;
 }
         
-void swap(double *__restrict A, double *__restrict Anew, int m, int n)
+void swap(double *__restrict A, double *__restrict Anew)
 {
-    for( int j = 1; j < n-1; j++)
-    {
-        for( int i = 1; i < m-1; i++ )
-        {
-            A[OFFSET(j, i, m)] = Anew[OFFSET(j, i, m)];    
-        }
-    }
+    double* tmp = A;
+    A = Anew;
+    Anew = tmp;
 }
 
 void deallocate(double *__restrict A, double *__restrict Anew)

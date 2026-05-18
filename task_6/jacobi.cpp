@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         nvtxRangePop();
 
         nvtxRangePushA("swap");
-        swap(A, Anew, m, n);
+        swap(A, Anew);
         nvtxRangePop();
 
         iter++;
@@ -76,13 +76,11 @@ int main(int argc, char **argv)
     nvtxRangePop();
 
     auto end = std::chrono::high_resolution_clock::now();
-
     std::chrono::duration<double> runtime = end - start;
 
     saveMatrix("result.txt", A, n, m);
 
     printf("Iterations: %d\n", iter);
-    printf("Error: %.8f\n", error);
     printf("Time: %f s\n", runtime.count());
 
     deallocate(A, Anew);
