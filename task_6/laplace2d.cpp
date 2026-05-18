@@ -3,7 +3,7 @@
 #include <cstring>
 
 
-void initialize(double *__restrict A, double *__restrict Anew, int m, int n)
+void initialize(double *A, double * Anew, int m, int n)
 {
     memset(A, 0, n * m * sizeof(double));
     memset(Anew, 0, n * m * sizeof(double));
@@ -38,6 +38,11 @@ void initialize(double *__restrict A, double *__restrict Anew, int m, int n)
     A[m - 1] = 20.0;
     A[(n - 1) * m] = 20.0;
     A[n * m - 1] = 30.0;
+
+    Anew[0] = 10.0;
+    Anew[m - 1] = 20.0;
+    Anew[(n - 1) * m] = 20.0;
+    Anew[n * m - 1] = 30.0;
 }
 
 double calcNext(double *__restrict A, double *__restrict Anew, int m, int n)
@@ -68,15 +73,8 @@ double calcNext(double *__restrict A, double *__restrict Anew, int m, int n)
     }
     return error;
 }
-        
-void swap(double *&__restrict A, double *&__restrict Anew)
-{
-    double* tmp = A;
-    A = Anew;
-    Anew = tmp;
-}
 
-void deallocate(double *__restrict A, double *__restrict Anew)
+void deallocate(double * A, double * Anew)
 {
     free(A);
     free(Anew);

@@ -47,8 +47,8 @@ int main(int argc, char **argv)
     int m = n;
     double error = 1.0;
 
-    double * __restrict A = (double *)malloc(sizeof(double) * n * m);
-    double * __restrict Anew = (double *)malloc(sizeof(double) * n * m);
+    double * A = (double *)malloc(sizeof(double) * n * m);
+    double * Anew = (double *)malloc(sizeof(double) * n * m);
 
     nvtxRangePushA("init");
     initialize(A, Anew, m, n);
@@ -67,7 +67,9 @@ int main(int argc, char **argv)
         nvtxRangePop();
 
         nvtxRangePushA("swap");
-        swap(A, Anew);
+        double* tmp = A;
+        A = Anew;
+        Anew = tmp;
         nvtxRangePop();
 
         iter++;
