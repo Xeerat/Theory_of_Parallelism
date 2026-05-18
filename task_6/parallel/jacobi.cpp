@@ -8,8 +8,6 @@
 #include <boost/program_options.hpp>
 
 #include "laplace2d.h"
-#include <nvtx3/nvToolsExt.h>
-
 namespace po = boost::program_options;
 
 void saveMatrix(const char* filename, double* A, int n, int m)
@@ -50,32 +48,22 @@ int main(int argc, char **argv)
     double * A = (double *)malloc(sizeof(double) * n * m);
     double * Anew = (double *)malloc(sizeof(double) * n * m);
 
-    nvtxRangePushA("init");
     initialize(A, Anew, m, n);
-    nvtxRangePop();
 
     int iter = 0;
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    nvtxRangePushA("main loop");
-
     while (error > tol && iter < iter_max)
     {
-        nvtxRangePushA("calc");
         error = calcNext(A, Anew, m, n);
-        nvtxRangePop();
 
-        nvtxRangePushA("swap");
         double* tmp = A;
         A = Anew;
         Anew = tmp;
-        nvtxRangePop();
 
         iter++;
     }
-
-    nvtxRangePop();
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> runtime = end - start;
