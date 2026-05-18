@@ -69,7 +69,7 @@ double calcNext(double *__restrict A, double *__restrict Anew, int m, int n)
     return error;
 }
         
-void swap(double *__restrict A, double *__restrict Anew)
+void swap(double *&__restrict A, double *&__restrict Anew)
 {
     double* tmp = A;
     A = Anew;
